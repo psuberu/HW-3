@@ -10,8 +10,8 @@ from HW-0 on how to
 
 This homework will cover the following topics:
 
-* Logistic Regression
-* Dates and Times
+* Logistic regression for prediction
+* Dates and times
 
 ## Notes
 

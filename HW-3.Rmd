@@ -22,25 +22,36 @@ Please indicate
 * Any comments you have: 
 
 
+## Data
+
+* You must first copy the file `profiles.csv` from `HW-2` to the `data` folder
+in the `HW-3` directory
+* We also consider all 222,540 songs played in the Reed College pool hall from
+Nov 30, 2003 to Jan 22, 2009 (included in `HW-3` folder). Be sure to do a quick
+EDA on the data before delving into the questions.
+
+```{r, echo=FALSE, cache=TRUE}
+# DO NOT EDIT THIS SECTION!
+profiles <- read.csv("data/profiles.csv", header=TRUE) %>% 
+  tbl_df()
+jukebox <- read.csv("data/jukebox.csv", header=TRUE) %>% 
+  tbl_df()
+```
+
+
 
 
 
 ## Question 1:
 
 For this question we will be picking up from where we left off in HW-2,
-specifically the OkCupid dataset. For the R Markdown to work, you must first
-copy the file `profiles.csv` from Lec09 to the project directory `HW-3`.
-
-```{r, echo=FALSE, cache=TRUE}
-# DO NOT EDIT THIS SECTION!
-profiles <- read.csv("profiles.csv", header=TRUE) %>% tbl_df()
-```
+specifically the OkCupid dataset.
 
 
 ### a)
 
 Using your exploratory data analysis from HW-2, fit a logistic regression and
-interpret all results
+interpret your results.
 
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
 
@@ -49,23 +60,36 @@ interpret all results
 
 ### b)
 
-Plot a histogram of the fitted probabilities $\widehat{p}$
+Plot a histogram of the fitted probabilities $\widehat{p}_i$ for all users $i=1,
+\ldots, n=59946$ in your dataset.
 
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
 
 ```
+
 
 ### c)
 
-Using a *decision threshold* of $p^*=0.5$, set up a contingency table of .
+Use a *decision threshold* of $p^*=0.5$ to make an explicit prediction for each
+user $i$'s sex and save this in a variable `predicted_sex`.  i.e. for user $i$
+
+* If $\widehat{p}_i > p^*=0.5$, set `predicted_sex = 1` i.e. female
+* If $\widehat{p}_i < p^*=0.5$, set `predicted_sex = 0` i.e. male
+
+Display a 2 x 2 contigency table of `sex` and `predicted_sex` i.e. compare the 
+predicted sex to the actual sex of all users. The sum of all the elements in
+your table should be $n=59946$.
 
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
 
 ```
 
+
 ### d)
 
-Say we wanted to have a false positive rate of 
+Say we wanted to have a **false positive rate** of about 20% i.e. of the people
+we predicted to be female, we want to be wrong no more than 20% of the time. What
+decision threshold $p^*=0.5$ should we use?
 
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
 
@@ -77,17 +101,15 @@ Say we wanted to have a false positive rate of
 
 ## Question 2:
 
-```{r, echo=FALSE, cache=TRUE}
-# DO NOT EDIT THIS SECTION!
-jukebox <- read.csv("jukebox.csv", header=TRUE)
-```
+Using the jukebox data, plot a time series of the number of songs played each
+week over the entire time period. i.e.
 
-For each academic year between 2003-2004 thru 2008-2009, who were the top 10 artists played?  Define
+* On the x-axis present actual dates (not numbers like Week 456, which doesn't 
+mean anything to most people). Having the `x` aesthetic reflect actual dates
+will require a little thought.
+* On the y-axis present the total number of songs.
 
-* the start of academic year as the first Tuesday in September
-* the end of the academic year as the last Monday in January plus 15 weeks plus 4 days (i.e. the Friday of that week)
-
-You can find these dates manually, or with the help of lubridate functions, or entirely using lubrdiate functions.  Display the results in easily digestible format.  
+What patterns do you observe?
 
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
 
@@ -99,7 +121,11 @@ You can find these dates manually, or with the help of lubridate functions, or e
 
 ## Question 3:
 
-Plot a time series of the number of songs played each week.  What patterns do you observe?  
+Using the jukebox data, what are the top 10 artists played
+during the "graveyard shift" during the academic year. Define
+
+* the "graveyard shift" as midnight to 8am
+* the academic year as September through May (inclusive)
 
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
 
@@ -111,9 +137,14 @@ Plot a time series of the number of songs played each week.  What patterns do yo
 
 ## Question 4:
 
-We want to study the volatility of bitcoin prices.  Let our measure of
-volatility be the *relative* change from day-to-day in price.  For which
-periods since 2013/01/01 did we see the most volatility?
+We want to compare the volatility of 
+
+* bitcoin prices
+* gold prices
+
+Let our measure of volatility be the *relative* change from day-to-day in price.
+Let the reference currency be US dollars. Analyze these results and provide 
+deliverable insight to a foreign currency exchanger.
 
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
 
@@ -125,21 +156,16 @@ periods since 2013/01/01 did we see the most volatility?
 
 ## Question 5:
 
-Compare the volatility of bitcoin prices with the volatility of the price of
-gold for the same time period.  What do you observe?
+Using the data loaded from Quandl below, plot a time series using `geom_line()`
+comparing cheese and milk production in the US from 1930 to today. Comment on this.
+
+* Cheese [page](https://www.quandl.com/data/USDANASS/NASS_CHEESEPRODUCTIONMEASUREDINLB-Cheese-Production-Measured-In-Lb)
+* Milk [page](https://www.quandl.com/data/USDANASS/NASS_MILKPRODUCTIONMEASUREDINLB-Milk-Production-Measured-In-Lb)
 
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
-
-```
-
-
-
-
-
-## Question 6:
-
-```{r, echo=FALSE, fig.width=12, fig.height=6}
-cheese <- Quandl("USDANASS/NASS_CHEESEPRODUCTIONMEASUREDINLB")
-milk <-  Quandl("USDANASS/NASS_MILKPRODUCTIONMEASUREDINLB")
+cheese <- Quandl("USDANASS/NASS_CHEESEPRODUCTIONMEASUREDINLB") %>% 
+  tbl_df()
+milk <-  Quandl("USDANASS/NASS_MILKPRODUCTIONMEASUREDINLB") %>% 
+  tbl_df()
 ```
 
