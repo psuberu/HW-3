@@ -12,6 +12,12 @@ This homework will cover the following topics:
 
 * Logistic regression for prediction
 * Dates and times
+    + Using Quandl package
+    + All 220K songs played on jukebox in Reed College pool hall.
+
+<img src="pool_hall.jpg" alt="Drawing" style="width: 500px;"/>
+
+
 
 ## Notes
 
@@ -24,3 +30,5 @@ This homework will cover the following topics:
 directory: `HW-3`.
 * We will have a discussion about this HW in the Wilson Media Lab on Wednesday
 4/20.
+
+

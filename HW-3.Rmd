@@ -121,8 +121,8 @@ What patterns do you observe?
 
 ## Question 3:
 
-Using the jukebox data, what are the top 10 artists played
-during the "graveyard shift" during the academic year. Define
+Using the jukebox data, what are the top 10 artists played during the "graveyard
+shift" during the academic year? Define
 
 * the "graveyard shift" as midnight to 8am
 * the academic year as September through May (inclusive)
