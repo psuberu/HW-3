@@ -26,9 +26,8 @@ Please indicate
 
 * You must first copy the file `profiles.csv` from `HW-2` to the `data` folder
 in the `HW-3` directory
-* We also consider all 222,540 songs played in the Reed College pool hall from
-Nov 30, 2003 to Jan 22, 2009 (included in `HW-3` folder). Be sure to do a quick
-EDA on the data before delving into the questions.
+* We also consider all 222,540 songs played in the Reed College pool hall
+jukebox from Nov 30, 2003 to Jan 22, 2009 (included in `HW-3` folder). 
 
 ```{r, echo=FALSE, cache=TRUE}
 # DO NOT EDIT THIS SECTION!
@@ -50,8 +49,8 @@ specifically the OkCupid dataset.
 
 ### a)
 
-Using your exploratory data analysis from HW-2, fit a logistic regression and
-interpret your results.
+Using your exploratory data analysis from HW-2, fit a logistic regression to
+predict individual's gender and interpret your results.
 
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
 
@@ -71,14 +70,14 @@ Plot a histogram of the fitted probabilities $\widehat{p}_i$ for all users $i=1,
 ### c)
 
 Use a *decision threshold* of $p^*=0.5$ to make an explicit prediction for each
-user $i$'s sex and save this in a variable `predicted_sex`.  i.e. for user $i$
+user $i$'s sex and save this in a variable `predicted_sex`. In other words, for user $i$
 
-* If $\widehat{p}_i > p^*=0.5$, set `predicted_sex = 1` i.e. female
-* If $\widehat{p}_i < p^*=0.5$, set `predicted_sex = 0` i.e. male
+* If $\widehat{p}_i > p^*$, set `predicted_sex = 1` i.e. they are female
+* If $\widehat{p}_i < p^*$, set `predicted_sex = 0` i.e. they are male
 
 Display a 2 x 2 contigency table of `sex` and `predicted_sex` i.e. compare the 
 predicted sex to the actual sex of all users. The sum of all the elements in
-your table should be $n=59946$.
+your table should be $n=59946$. Comment on how well our predictions fared.
 
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
 
@@ -87,9 +86,9 @@ your table should be $n=59946$.
 
 ### d)
 
-Say we wanted to have a **false positive rate** of about 20% i.e. of the people
+Say we wanted to have a **false positive rate** of about 20%, i.e. of the people
 we predicted to be female, we want to be wrong no more than 20% of the time. What
-decision threshold $p^*=0.5$ should we use?
+decision threshold $p^*$ should we use?
 
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
 
@@ -104,12 +103,11 @@ decision threshold $p^*=0.5$ should we use?
 Using the jukebox data, plot a time series of the number of songs played each
 week over the entire time period. i.e.
 
-* On the x-axis present actual dates (not numbers like Week 456, which doesn't 
-mean anything to most people). Having the `x` aesthetic reflect actual dates
-will require a little thought.
+* On the x-axis present actual dates (not something like Week 93, which doesn't 
+mean anything to most people).
 * On the y-axis present the total number of songs.
 
-What patterns do you observe?
+What seasonal (i.e. cyclical) patterns do you observe?
 
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
 
@@ -142,9 +140,9 @@ We want to compare the volatility of
 * bitcoin prices
 * gold prices
 
-Let our measure of volatility be the *relative* change from day-to-day in price.
-Let the reference currency be US dollars. Analyze these results and provide 
-deliverable insight to a foreign currency exchanger.
+Let our measure of volatility be the relative change from day-to-day in price. 
+Let the reference currency be US dollars. Analyze these results and provide
+insight to a foreign currency exchanger.
 
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
 
