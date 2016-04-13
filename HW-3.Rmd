@@ -1,6 +1,6 @@
 ---
 title: "MATH 216 Homework 3"
-author: "WRITE YOUR NAME HERE"
+author: "Paul Suberu"
 output: html_document
 ---
 
@@ -9,6 +9,9 @@ suppressPackageStartupMessages(library(ggplot2))
 suppressPackageStartupMessages(library(dplyr))
 suppressPackageStartupMessages(library(lubridate))
 suppressPackageStartupMessages(library(Quandl))
+suppressPackageStartupMessages(library(tidyr))
+suppressPackageStartupMessages(library(knitr))
+suppressPackageStartupMessages(library(pander))
 ```
 
 
@@ -16,9 +19,9 @@ suppressPackageStartupMessages(library(Quandl))
 
 Please indicate
 
-* Who you collaborated with:
-* Roughly how much time you spent on this HW:
-* What gave you the most trouble:
+* Who you collaborated with:Christian, Kyler
+* Roughly how much time you spent on this HW:7hrs
+* What gave you the most trouble:Number 1 gave me the most trouble. Particularly understanding the exploratory data analysis,and fitting the logistic regression. I think the rest went fine.Also there were some problems when I published it, with some of the spacing between the words and the margins. My R crashed and I think was re-updated so that might have been part of the problem.
 * Any comments you have: 
 
 
@@ -53,9 +56,34 @@ Using your exploratory data analysis from HW-2, fit a logistic regression to
 predict individual's gender and interpret your results.
 
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
+profiles <- filter(profiles, sex != "")
+essays <- select(profiles, contains("essay"))
+profiles <- select(profiles, -contains("essay"))
+profiles <- mutate(profiles, is_female = ifelse(sex=="f", 1, 0))
+profiles <- mutate(profiles,does_smoke = as.numeric(as.character(smokes)))
+ggplot(data=profiles, aes(x=does_smoke, y=is_female)) +
+geom_jitter(height=0.2, alpha = 0.1) +
+xlim(c(50, 80)) + 
+labs(title = "Smokers in Bay Area Okcupid Profiles", x = "age", y = "Is Female")
+find.query <- function(char.vector, query){
+which.has.query <- grep(query, char.vector, ignore.case = TRUE)
+length(which.has.query) != 0
+}
+profile.has.query <- function(data.frame, query){
+query <- tolower(query)
+has.query <- apply(data.frame, 1, find.query, query=query)
+return(has.query)
+}
+profiles$does_smoke <- profile.has.query(data.frame = essays, query = "smokes")
+group_by(profiles, does_smoke) %>% 
+summarise(prop_female=mean(is_female)) %>% kable(., digits = 3)
+
+model1 <- glm(is_female ~ does_smoke, data=profiles, family=binomial, na.action = na.exclude)
+l <- summary(model1)
+kable(l$coef, digits = 3)
 
 ```
-
+My results show that if the proportion of females that have smoking in their profiles is .369 while the proportion that don't have smokes in their profile .402. However this might not be an accurate EDA because most people generally dont have they are a smoker in their profiles,it is usually part of a survey.
 
 ### b)
 
@@ -63,7 +91,12 @@ Plot a histogram of the fitted probabilities $\widehat{p}_i$ for all users $i=1,
 \ldots, n=59946$ in your dataset.
 
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
-
+p_hat <- fitted(model1)
+ggplot(data = NULL, aes(x = p_hat)) +
+geom_histogram(binwidth = 0.2, col="green", 
+fill="blue", 
+alpha = .2) +geom_vline(xintercept = 0.5, col = "black") +
+labs(title = "Fitted Probabilities Histogram", x = "P hat", y = "OK Cupid Users")
 ```
 
 
@@ -80,9 +113,35 @@ predicted sex to the actual sex of all users. The sum of all the elements in
 your table should be $n=59946$. Comment on how well our predictions fared.
 
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
-
+fit_pred <- c()
+for(i in 1:59946) {
+if(!is.na(p_hat [i])){
+if(p_hat[i] >= 0.5) {
+fit_pred[i] <- 1
+ }
+if(p_hat[i] < 0.5) {
+fit_pred[i] <- 0
+}
+}else{
+fit_pred[i] <- NA
+}
+}
+profiles$pred_female <- fit_pred
+obs <- profiles  %>% group_by(is_female)  %>% tally()
+pred <- profiles  %>% group_by(pred_female)  %>% tally()
+contingency <- matrix(nrow = 4, ncol = 2)
+colnames(contingency) <- c("Actual", "Predicted")
+rownames(contingency) <- c("Male", "Female", "Unknown", "Sum")
+contingency[1,1] <- obs[1,2][[1]]
+contingency[2,1] <- obs[2,2][[1]]
+contingency[4,1] <- contingency[1,1] + contingency[2,1]
+contingency[1,2] <- pred[1,2][[1]]
+contingency[2,2] <- pred[2,2][[1]]
+contingency[3,2] <- pred[3,2][[1]]
+contingency[4,2] <- contingency[1,2] + contingency[2,2] + contingency[3,2]
+kable(as.data.frame(contingency))
 ```
-
+Was not sure what was wrong with my model and why it was not able to predict the sex.It predicted all the sexes as male.
 
 ### d)
 
@@ -93,7 +152,7 @@ decision threshold $p^*$ should we use?
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
 
 ```
-
+Could not solve this one.
 
 
 
@@ -110,9 +169,33 @@ mean anything to most people).
 What seasonal (i.e. cyclical) patterns do you observe?
 
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
+jukebox <- jukebox %>% mutate(Date_format = parse_date_time(date_time, "%b %d %H%M%S %y"))
+jukebox1<- jukebox[ -c(7,8) ]  
+jukebox1 <- jukebox1 %>% separate(Date_format, c("Date", "Time"), sep = " ")
+jukebox1 <- jukebox1 %>% mutate(week = week(Date))
+jukebox1 <- jukebox1 %>% mutate(year = year(Date))
+songsperweek <- jukebox1  %>% group_by(year, week)  %>% tally() 
+songsperweek$date <- as.Date(paste(songsperweek$year, 
+songsperweek$week, 1, sep="-"), "%Y-%U-%u")
+ggplot(data = songsperweek, aes(x = date, y = n)) +
+geom_area() +
+labs(title = "Songs Played per Week", x = "Date",y = "Number of Songs")
+songsperweek <- songsperweek %>% mutate(month = month(date)) %>% select(month,n)
+winter <- c(12, 1, 2)
+spring <- c(3, 4, 5)
+summer <- c(6, 7, 8)
+autumn <- c(9, 10, 11)
+songsbyseason <- songsperweek %>% 
+mutate(season= 
+ifelse(month %in% winter, 'winter', 
+ifelse(month %in% spring, 'spring', 
+ifelse(month %in% summer, 'summer', 
+ifelse(month %in% autumn, 'autumn', NA)))))
+ggplot(data = songsbyseason, aes(x = season, y = n)) +
+geom_boxplot() +labs(title = "Songs Played by Season", x= "Season",y = "Number of Songs")
 
 ```
-
+Wasn't sure how to get the first part to this question. However, the largest range of songs played during a season was in winter. Also the shortest range was in the summer.However on average there were more songs played during the summer than any other season.
 
 
 
@@ -126,9 +209,15 @@ shift" during the academic year? Define
 * the academic year as September through May (inclusive)
 
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
-
+jukebox1 <- jukebox1 %>% mutate(month = month(Date))
+academic <- c(9, 10, 11, 12, 1, 2, 3, 4, 5)
+academic_songs <- jukebox1 %>% mutate(academic = ifelse(month %in% academic, 'academic', 'break')) %>% 
+filter(academic == "academic")
+academic_songs <- academic_songs %>% filter(Time > "00:00:00", Time < "08:00:00")
+academic_songs %>% group_by(artist) %>% 
+tally() %>% arrange(desc(n)) %>% slice(1:10) %>% kable()
 ```
-
+OutKast was the most popular artist played during the graveyard shift, followed by the beatles, and then Led Zeppelin.I guess it was mostly old music and classics that was played during that time range, while modern music would have been played while people were at the hall.
 
 
 
@@ -145,9 +234,18 @@ Let the reference currency be US dollars. Analyze these results and provide
 insight to a foreign currency exchanger.
 
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
-
+gold<- Quandl("WGC/GOLD_DAILY_USD", start_date="2010-07-17")%>% tbl_df()
+bitcoin <- Quandl("BAVERAGE/USD") %>% tbl_df()
+bitcoin <- rename(bitcoin, Avg = `24h Average`, Total.Volume = `Total Volume`)
+currency <- left_join(bitcoin, gold, by = "Date")
+ggplot(data = currency, aes(x = Date)) +
+geom_line(aes(x = Date, y = Avg), colour = "blue") +
+geom_line(aes(x = Date, y = Value), colour = "red") +
+labs(title = "Variation in Average Currency Prices", x = "Date",y = "Average Price for Day (Dollars)")
+bitcoin_diff <- diff(currency$Avg)
+gold_diff <- diff(currency$Value)
 ```
-
+Bitcoin is the blue, and Gold is the red. We see that bitcoin first becomes popular as an exchange in 2013, and it rose until 2014. However as it gained popularity questions probably arose as to its legitimacy and its connection with shady activities such as "The silk road" decreasing its exchange value. It is also a lot lower compared to gold, which has the confidence of investors and legitimacy behind it.
 
 
 
