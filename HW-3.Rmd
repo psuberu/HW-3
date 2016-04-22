@@ -56,34 +56,24 @@ Using your exploratory data analysis from HW-2, fit a logistic regression to
 predict individual's gender and interpret your results.
 
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
-profiles <- filter(profiles, sex != "")
-essays <- select(profiles, contains("essay"))
-profiles <- select(profiles, -contains("essay"))
-profiles <- mutate(profiles, is_female = ifelse(sex=="f", 1, 0))
-profiles <- mutate(profiles,does_smoke = as.numeric(as.character(smokes)))
-ggplot(data=profiles, aes(x=does_smoke, y=is_female)) +
-geom_jitter(height=0.2, alpha = 0.1) +
-xlim(c(50, 80)) + 
-labs(title = "Smokers in Bay Area Okcupid Profiles", x = "age", y = "Is Female")
-find.query <- function(char.vector, query){
-which.has.query <- grep(query, char.vector, ignore.case = TRUE)
-length(which.has.query) != 0
-}
-profile.has.query <- function(data.frame, query){
-query <- tolower(query)
-has.query <- apply(data.frame, 1, find.query, query=query)
-return(has.query)
-}
-profiles$does_smoke <- profile.has.query(data.frame = essays, query = "smokes")
-group_by(profiles, does_smoke) %>% 
-summarise(prop_female=mean(is_female)) %>% kable(., digits = 3)
+profiles1 <- mutate(profiles, is_female = ifelse(sex == "f", 1, 0))
+smokes <- profiles1 %>% 
+select(smokes, is_female) %>% 
+group_by(smokes) %>% 
+mutate(sum = sum(is_female),
+prop_female = mean(is_female)) %>% 
+distinct(smokes) %>% 
+arrange(prop_female)
+modeldata <- profiles1 %>% 
+mutate(does_smoke = ifelse(smokes %in% c("yes", "sometimes","when drinking","trying to quit"), 1, 0))
+#health_edu_cler = ifelse(job %in% c("medicine / health", "education / academia", "clerical / administrative"), 1, 0)) %>%     
+#na.omit(height)
 
-model1 <- glm(is_female ~ does_smoke, data=profiles, family=binomial, na.action = na.exclude)
-l <- summary(model1)
-kable(l$coef, digits = 3)
-
+model2 <- glm(is_female ~ does_smoke, data = modeldata, family = binomial(link = "logit"))
+summary(model2)
 ```
-My results show that if the proportion of females that have smoking in their profiles is .369 while the proportion that don't have smokes in their profile .402. However this might not be an accurate EDA because most people generally dont have they are a smoker in their profiles,it is usually part of a survey.
+
+My results show that for every 1 of an increase in the indicator that they smoke. There is a odds of .21 that the person is male.
 
 ### b)
 
@@ -91,12 +81,14 @@ Plot a histogram of the fitted probabilities $\widehat{p}_i$ for all users $i=1,
 \ldots, n=59946$ in your dataset.
 
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
-p_hat <- fitted(model1)
+p_hat <- fitted(model2)
 ggplot(data = NULL, aes(x = p_hat)) +
 geom_histogram(binwidth = 0.2, col="green", 
 fill="blue", 
 alpha = .2) +geom_vline(xintercept = 0.5, col = "black") +
 labs(title = "Fitted Probabilities Histogram", x = "P hat", y = "OK Cupid Users")
+co <- coefficients(model2)
+hist(fitted(model2))
 ```
 
 
@@ -127,8 +119,8 @@ fit_pred[i] <- NA
 }
 }
 profiles$pred_female <- fit_pred
-obs <- profiles  %>% group_by(is_female)  %>% tally()
-pred <- profiles  %>% group_by(pred_female)  %>% tally()
+obs <- profiles1  %>% group_by(is_female)  %>% tally()
+pred <-profiles1  %>% group_by(is_female)  %>% tally()
 contingency <- matrix(nrow = 4, ncol = 2)
 colnames(contingency) <- c("Actual", "Predicted")
 rownames(contingency) <- c("Male", "Female", "Unknown", "Sum")
@@ -141,7 +133,8 @@ contingency[3,2] <- pred[3,2][[1]]
 contingency[4,2] <- contingency[1,2] + contingency[2,2] + contingency[3,2]
 kable(as.data.frame(contingency))
 ```
-Was not sure what was wrong with my model and why it was not able to predict the sex.It predicted all the sexes as male.
+
+Still had problems with this. It predicted everyone as male.Then it just ran the same predictions as observed.
 
 ### d)
 
@@ -152,7 +145,7 @@ decision threshold $p^*$ should we use?
 ```{r, echo=FALSE, fig.width=12, fig.height=6}
 
 ```
-Could not solve this one.
+
 
 
 
@@ -195,7 +188,8 @@ ggplot(data = songsbyseason, aes(x = season, y = n)) +
 geom_boxplot() +labs(title = "Songs Played by Season", x= "Season",y = "Number of Songs")
 
 ```
-Wasn't sure how to get the first part to this question. However, the largest range of songs played during a season was in winter. Also the shortest range was in the summer.However on average there were more songs played during the summer than any other season.
+
+The largest range of songs played during a season was in winter. Also the shortest range was in the summer.However on average there were more songs played during the summer than any other season.
 
 
 
@@ -217,6 +211,7 @@ academic_songs <- academic_songs %>% filter(Time > "00:00:00", Time < "08:00:00"
 academic_songs %>% group_by(artist) %>% 
 tally() %>% arrange(desc(n)) %>% slice(1:10) %>% kable()
 ```
+
 OutKast was the most popular artist played during the graveyard shift, followed by the beatles, and then Led Zeppelin.I guess it was mostly old music and classics that was played during that time range, while modern music would have been played while people were at the hall.
 
 
@@ -244,8 +239,25 @@ geom_line(aes(x = Date, y = Value), colour = "red") +
 labs(title = "Variation in Average Currency Prices", x = "Date",y = "Average Price for Day (Dollars)")
 bitcoin_diff <- diff(currency$Avg)
 gold_diff <- diff(currency$Value)
+bitcoin <- na.omit(bitcoin)
+gold <- na.omit(gold)
+gold <- gold %>% 
+mutate(percentchange_gold= (((Value/lag(Value))-1)*100))
+bitcoin <- bitcoin %>% 
+mutate(percentchange_bitcoin= (((Avg/lag(Avg))-1)*100))
+currensy1 <- left_join(bitcoin, gold, by = "Date") %>% 
+mutate(diff_in_vol = (percentchange_bitcoin-percentchange_gold))
+bigplot <- ggplot(currensy1, aes(Date))
+bigplot + geom_line(aes(y = percentchange_bitcoin, colour = "BTC")) +  
+geom_line(aes(y = percentchange_gold, colour = "Gold")) +
+labs(title="Daily Volatily from Previous Price, GOLD, BTC")
+
 ```
-Bitcoin is the blue, and Gold is the red. We see that bitcoin first becomes popular as an exchange in 2013, and it rose until 2014. However as it gained popularity questions probably arose as to its legitimacy and its connection with shady activities such as "The silk road" decreasing its exchange value. It is also a lot lower compared to gold, which has the confidence of investors and legitimacy behind it.
+
+Bitcoin is the blue, and Gold is the red. We see that bitcoin first becomes popular as an exchange in 2013, and it rose until 2014. However as it gained popularity questions probably arose as to its legitimacy and its connection with shady activities such as "The silk road" decreasing its exchange value. 
+
+In the second graph we see that bitcoin is a lot more volatile than gold.
+
 
 
 
